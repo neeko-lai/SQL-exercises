@@ -10,9 +10,9 @@ WHERE price < 500
 ## 2 задание
 
 ```sql
-SELECT DISTINCT maker
+SELECT maker
 FROM product
-WHERE product.type = 'Printer'
+WHERE product.type = 'printer'
 GROUP BY maker
 ```
 
@@ -45,7 +45,7 @@ WHERE (cd = '24x' OR cd = '12x') AND price < 600
 ```sql
 SELECT maker, speed
 FROM product INNER JOIN laptop ON product.model = laptop.model
-WHERE hd >= 10;
+WHERE hd >= 10
 ```
 
 ## 7 задание
@@ -61,7 +61,7 @@ WHERE product.maker = 'B'
 UNION
 SELECT DISTINCT product.model, printer.price
 FROM product INNER JOIN printer ON printer.model = product.model
-WHERE product.maker = 'B';
+WHERE product.maker = 'B'
 ```
 
 ## 8 задание
@@ -79,948 +79,476 @@ GROUP BY maker
 ```sql
 SELECT maker
 FROM pc INNER JOIN Product ON pc.model = product.model
-WHERE speed >= 450;
+WHERE speed >= 450
 ```
 
 ## 10 задание
 
 ```sql
-SELECT
-    DISTINCT model,
-    price
-FROM
-    Printer
-WHERE
-    price >= (
-        SELECT
-            MAX(price)
-        FROM
-            Printer
-    );
+SELECT model, price
+FROM printer
+WHERE price >= (SELECT max(price) FROM printer)
 ```
 
 ## 11 задание
 
 ```sql
-SELECT
-    AVG(Speed) AS avgSpeed
-FROM
-    PC;
+SELECT avg(speed)
+FROM pc
 ```
 
 ## 12 задание
 
 ```sql
-SELECT
-    AVG(Speed) AS avgSpeed_forOver1k
-FROM
-    Laptop
-WHERE
-    price > 1000;
+SELECT avg(speed)
+FROM laptop
+WHERE price > 1000;
 ```
 
 ## 13 задание
 
 ```sql
-SELECT
-    AVG(PC.Speed) AS avgSpeed_fromAmaker
-FROM
-    Product
-    INNER JOIN PC ON PC.model = Product.model
-WHERE
-    Product.maker = 'A';
+SELECT avg(speed)
+FROM product INNER JOIN pc ON pc.model = product.model
+WHERE maker = 'A'
+GROUP BY maker
 ```
 
 ## 14 задание
 
 ```sql
-SELECT
-    Classes.class,
-    Ships.name,
-    Classes.country
-FROM
-    Ships
-    INNER JOIN Classes ON Ships.class = Classes.class
-WHERE
-    Classes.numGuns >= 10;
+SELECT classes.class, name, country
+FROM ships INNER JOIN classes ON ships.class = classes.class
+WHERE classes.numGuns >= 10
 ```
 
-## 15
+## 15 задание
 
 ```sql
-SELECT
-    hd
-FROM
-    PC
-GROUP BY
-    hd
-HAVING
-    COUNT (model) >= 2;
+SELECT hd
+FROM pc
+GROUP BY hd
+HAVING count(model) > 1
 ```
 
-## 16
+## 16 задание
 
 ```sql
-SELECT
-    DISTINCT A.model AS Amodel,
-    B.model AS Bmodel,
-    A.speed AS ABspeed,
-    A.ram AS ABram
-FROM
-    PC AS A,
-    PC AS B
-WHERE
-    A.model > B.model
-    AND A.speed = B.speed
-    AND A.ram = B.ram;
+SELECT DISTINCT A.model, B.model, A.speed, A.ram
+FROM pc AS A, pc AS B
+WHERE A.model > B.model AND A.speed = B.speed AND A.ram = B.ram
 ```
 
-## 17
+## 17 задание
 
 ```sql
-SELECT
-    DISTINCT TYPE,
-    Laptop.model,
-    speed
-FROM
-    Laptop
-    INNER JOIN Product ON Product.model = Laptop.model
-WHERE
-    speed < ALL(
-        SELECT
-            speed
-        FROM
-            PC
-    );
+SELECT DISTINCT type, laptop.model, speed
+FROM laptop INNER JOIN product ON product.model = laptop.model
+WHERE speed < (SELECT speed FROM PC)
 ```
 
-## 18
+## 18 задание
 
 ```sql
-SELECT
-    DISTINCT Product.maker,
-    Printer.price
-FROM
-    Printer
-    INNER JOIN Product ON Product.model = Printer.model
-WHERE
-    Printer.price = (
-        SELECT
-            MIN(price)
-        FROM
-            Printer
-        WHERE
-            color = 'y'
-    )
-    AND color = 'y';
+SELECT DISTINCT maker, price
+FROM printer INNER JOIN product ON product.model = printer.model
+WHERE price = (SELECT min(price) FROM printer WHERE color = 'y') AND color = 'y'
 ```
 
-## 19
+## 19 задание
 
 ```sql
-SELECT
-    DISTINCT Product.maker,
-    AVG(Laptop.screen) AS avgLscreen
-FROM
-    Laptop
-    INNER JOIN Product ON Product.model = Laptop.model
-GROUP BY
-    maker;
+SELECT maker, avg(screen)
+FROM laptop INNER JOIN product ON product.model = laptop.model
+GROUP BY maker  
 ```
 
-## 20
+## 20 задание
 
 ```sql
-SELECT
-    DISTINCT Product.maker,
-    COUNT(Product.model) AS countModel
-FROM
-    Product
-WHERE
-    TYPE = 'PC'
-GROUP BY
-    maker
-HAVING
-    COUNT (Product.model) >= 3;
+SELECT maker, count(model)
+FROM product
+WHERE type = 'pc'
+GROUP BY maker
+HAVING count(model) >= 3
 ```
 
-## 21
+## 21 задание
 
 ```sql
-SELECT
-    DISTINCT Product.maker,
-    MAX(PC.price) AS maxPCprice
-FROM
-    Product
-    INNER JOIN PC ON PC.model = Product.model
-WHERE
-    TYPE = 'PC'
-GROUP BY
-    maker;
+SELECT maker, max(price)
+FROM product INNER JOIN pc ON pc.model = product.model
+WHERE type = 'pc'
+GROUP BY maker
 ```
 
-## 22
+## 22 задание
 
 ```sql
-SELECT
-    DISTINCT PC.speed,
-    AVG(PC.price) AS avgPCprice
-FROM
-    PC
-WHERE
-    PC.speed > 600
-GROUP BY
-    PC.speed;
+SELECT speed, avg(price)
+FROM pc
+WHERE speed > 600
+GROUP BY speed
 ```
 
-## 23
+## 23 задание
 
 ```sql
-SELECT
-    DISTINCT Product.maker
-FROM
-    Product
-    INNER JOIN PC ON PC.model = Product.model
-WHERE
-    PC.speed >= 750
+SELECT DISTINCT maker
+FROM product INNER JOIN pc ON pc.model = product.model
+WHERE pc.speed >= 750
 INTERSECT
-SELECT
-    DISTINCT Product.maker
-FROM
-    Product
-    INNER JOIN Laptop ON Laptop.model = Product.model
-WHERE
-    Laptop.speed >= 750;
+SELECT DISTINCT maker
+FROM product INNER JOIN laptop ON laptop.model = product.model
+WHERE laptop.speed >= 750
 ```
 
-## 24
+## 24 задание
 
 ```sql
-WITH max_price AS (
-    SELECT
-        model,
-        price
-    FROM
-        PC
-    WHERE
-        price = (
-            SELECT
-                MAX(price)
-            FROM
-                PC
-        )
-    UNION
-    SELECT
-        model,
-        price
-    FROM
-        Laptop
-    WHERE
-        price = (
-            SELECT
-                MAX(price)
-            FROM
-                Laptop
-        )
-    UNION
-    SELECT
-        model,
-        price
-    FROM
-        Printer
-    WHERE
-        price = (
-            SELECT
-                MAX(price)
-            FROM
-                Printer
-        )
-)
-SELECT
-    model
-FROM
-    max_price
-WHERE
-    price = (
-        SELECT
-            MAX(price)
-        FROM
-            max_price
-    );
+SELECT model 
+FROM (SELECT distinct model, price 
+FROM laptop 
+WHERE laptop.price = (SELECT MAX(price) FROM laptop)  
+UNION 
+SELECT distinct model, price 
+FROM pc WHERE pc.price = (SELECT MAX(price) FROM pc)  
+UNION 
+SELECT distinct model, price 
+FROM printer 
+WHERE printer.price = (SELECT MAX(price) FROM printer) ) as t 
+
+WHERE t.price = (SELECT max(price) FROM (SELECT DISTINCT price FROM laptop WHERE laptop.price = (SELECT max(price) FROM laptop)  
+UNION 
+SELECT DICTINCT price FROM pc WHERE pc.price = (SELECT max(price) FROM pc)  
+UNION 
+SELECT DISTINCT price FROM printer WHERE printer.price = (SELECT max(price) FROM printer)  
+) as t1 )    
 ```
 
-## 25
+## 25 задание
 
 ```sql
-SELECT
-    DISTINCT maker
-FROM
-    product,
-    (
-        SELECT
-            max(speed) AS speed,
-            ram
-        FROM
-            pc
-        WHERE
-            ram IN (
-                SELECT
-                    min(ram) AS ram
-                FROM
-                    pc
-            )
-        GROUP BY
-            ram
-    ) AS R
-WHERE
-    TYPE = 'Printer'
-    AND maker IN (
-        SELECT
-            maker
-        FROM
-            product
-            JOIN pc ON pc.model = product.model
-        WHERE
-            pc.speed = R.speed
-            AND pc.ram = R.ram
-    );
+SELECT DISTINCT product.maker FROM product WHERE product.type = 'printer'  
+INTERSECT 
+SELECT DISTINCT product.maker FROM product INNER JOIN pc ON pc.model = product.model  
+WHERE product.type = 'pc' AND pc.ram = (SELECT min(ram) FROM pc)  
+AND pc.speed = (SELECT max(speed) FROM (SELECT distinct speed FROM pc 
+WHERE pc.ram = (SELECT min(ram) FROM pc)) as t) 
 ```
 
-## 26
+## 26 задание
 
 ```sql
-WITH temp AS (
-    SELECT
-        model,
-        price
-    FROM
-        PC
-    UNION
-    ALL
-    SELECT
-        model,
-        price
-    FROM
-        Laptop
-)
-SELECT
-    avg(price)
-FROM
-    temp
-    JOIN Product AS p ON temp.model = p.model
-    AND p.maker = 'A' -- WHERE p.maker = 'A'
-;
+SELECT DISTINCT product.maker FROM product WHERE product.type = 'printer'  
+INTERSECT 
+SELECT DISTINCT product.maker FROM product INNER JOIN pc ON pc.model = product.model  
+WHERE product.type = 'pc' AND pc.ram = (SELECT min(ram) FROM pc)  
+AND pc.speed = (SELECT max(speed) FROM (SELECT distinct speed FROM pc 
+WHERE pc.ram = (SELECT min(ram) FROM pc)) as t) 
 ```
 
-## 27
+## 27 задание
 
 ```sql
-SELECT
-    DISTINCT maker,
-    AVG(hd)
-FROM
-    Product
-    INNER JOIN PC ON PC.model = product.model
-WHERE
-    maker IN (
-        SELECT
-            maker
-        FROM
-            product
-        WHERE
-            TYPE = 'printer'
-    )
-GROUP BY
-    maker;
+SELECT maker, avg(hd)
+FROM product INNER JOIN pc ON pc.model = product.model
+WHERE maker IN (SELECT maker FROM product WHERE type = 'printer')
+GROUP BY maker
 ```
 
-## 28
+## 28 задание
 
 ```sql
-WITH one_model_makers AS (
-    SELECT
-        maker
-    FROM
-        Product
-    GROUP BY
-        maker
-    HAVING
-        count(model) = 1
-)
-SELECT
-    count(maker) AS qty
-FROM
-    one_model_makers;
+SELECT avg(hd)  
+FROM product INNER JOIN pc on product.model = pc.model   
+WHERE maker IN (SELECT maker FROM product WHERE type = 'printer') 
 ```
 
-## 29
+## 29 задание
 
 ```sql
-SELECT
-    t.point,
-    t.date,
-    SUM(t.inc),
-    sum(t.out)
-FROM
-    (
-        SELECT
-            point,
-            date,
-            inc,
-            NULL AS out
-        FROM
-            Income_o
-        UNION
-        SELECT
-            point,
-            date,
-            NULL AS inc,
-            Outcome_o.out
-        FROM
-            Outcome_o
-    ) AS t
-GROUP BY
-    t.point,
-    t.date
-SELECT
-    CASE
-        WHEN i.point IS NOT NULL THEN i.point
-        ELSE o.point
-    END,
-    CASE
-        WHEN i.date IS NOT NULL THEN i.date
-        ELSE o.date
-    END,
-    inc,
-    out
-FROM
-    Income_o i FULL
-    OUTER JOIN Outcome_o o ON i.point = o.point
-    AND i.date = o.date;
-```
-
-## 30
-
-```sql
-SELECT
-    point,
-    date,
-    SUM(sum_out),
-    SUM(sum_inc)
-FROM
-    (
-        SELECT
-            point,
-            date,
-            SUM(inc) AS sum_inc,
-            NULL AS sum_out
-        FROM
-            Income
-        GROUP BY
-            point,
-            date
-        UNION
-        SELECT
-            point,
-            date,
-            NULL AS sum_inc,
-            SUM(out) AS sum_out
-        FROM
-            Outcome
-        GROUP BY
-            point,
-            date
-    ) AS t
-GROUP BY
-    point,
-    date
-ORDER BY
-    point;
-```
-
-## 31
-
-```sql
-SELECT
-    DISTINCT class,
-    country
-FROM
-    Classes
-WHERE
-    Classes.bore >= 16;
-```
-
-## 32
-
-```sql
-SELECT
-    Classes.country,
-    cast(avg((power(Classes.bore, 3) / 2)) AS numeric(6, 2))
-FROM
-    Classes
-GROUP BY
-    Classes.country;
-```
-
-## 33
-
-```sql
-SELECT
-    ship
-FROM
-    Outcomes
-WHERE
-    battle = 'North Atlantic'
-    AND result = 'sunk';
-```
-
-## 34
-
-```sql
-SELECT
-    Ships.name
-FROM
-    Ships
-    INNER JOIN Classes ON Ships.class = Classes.class
-WHERE
-    Ships.launched IS NOT NULL
-    AND Ships.launched >= 1922
-    AND Classes.type = 'bb'
-    AND Classes.displacement > 35000;
-```
-
-## 35
-
-```sql
-SELECT
-    Product.model,
-    Product.type
-FROM
-    Product
-WHERE
-    Product.model NOT LIKE '%[^0-9]%'
-    OR Product.model NOT LIKE '%[^A-Z]%';
-```
-
-## 36
-
-```sql
-SELECT
-    name
-FROM
-    Ships
-WHERE
-    class = name
+SELECT t.point, t.date, sum(t.inc), sum(t.out) 
+FROM (SELECT point, date, inc, NULL AS out FROM Income_o  
 UNION
-SELECT
-    ship AS name
-FROM
-    Classes,
-    Outcomes
-WHERE
-    Classes.class = Outcomes.ship;
+SELECT point, date, NULL AS inc, Outcome_o.out FROM Outcome_o) AS t 
+GROUP BY t.point, t.date  
 ```
 
-## 37
+## 30 задание
 
 ```sql
-SELECT
-    class
-FROM
-    (
-        SELECT
-            name,
-            class
-        FROM
-            Ships
-        UNION
-        SELECT
-            class AS name,
-            class
-        FROM
-            Classes,
-            Outcomes
-        WHERE
-            Classes.class = Outcomes.ship
-    ) A
-GROUP BY
-    class
-HAVING
-    count(A.name) = 1;
+SELECT point, date, sum(sum_out), sum(sum_inc)
+FROM (
+SELECT point, date, sum(inc) AS sum_inc, NULL AS sum_out
+FROM Income
+GROUP BY point, date
+UNION
+SELECT point, date, NULL AS sum_inc, SUM(out) AS sum_out
+FROM Outcome
+GROUP BY point, date) AS t
+GROUP BY point, date
+ORDER BY point
 ```
 
-## 38
+## 31 задание
 
 ```sql
-SELECT
-    Classes.country
-FROM
-    Classes
-WHERE
-    Classes.type = 'bc'
-INTERSECT
-SELECT
-    Classes.country
-FROM
-    Classes
-WHERE
-    Classes.type = 'bb';
+SELECT class, country
+FROM classes
+WHERE bore >= 16
 ```
 
-## 39
+## 32 задание
 
 ```sql
-WITH temp AS (
-    SELECT
-        *
-    FROM
-        Outcomes
-        JOIN Battles ON Outcomes.battle = Battles.name
-)
-SELECT
-    DISTINCT a.ship
-FROM
-    temp AS a
-WHERE
-    UPPER(a.ship) IN (
-        SELECT
-            UPPER(b.ship)
-        FROM
-            temp AS b
-        WHERE
-            b.date < a.date
-            AND b.result = 'damaged'
-    );
+SELECT country, cast(avg((power(classes.bore, 3) / 2)) AS numeric(6, 2))
+FROM classes
+GROUP BY classes.country
 ```
 
-## 40
+## 33 задание
 
 ```sql
-SELECT
-    maker,
-    MAX(TYPE) AS TYPE
-FROM
-    product
-GROUP BY
-    maker
-HAVING
-    COUNT (model) > 1
-    AND MAX(TYPE) = MIN(TYPE);
+SELECT ship
+FROM Outcomes
+WHERE battle = 'North Atlantic' AND result = 'sunk'
+GROUP BY ship
 ```
 
-## 41
+## 34 задание
 
 ```sql
-WITH temp AS (
-    SELECT
-        Product.maker,
-        temp2.price
-    FROM
-        Product
-        JOIN (
-            SELECT
-                model,
-                price
-            FROM
-                PC
-            UNION
-            SELECT
-                model,
-                price
-            FROM
-                Laptop
-            UNION
-            SELECT
-                model,
-                price
-            FROM
-                Printer
-        ) AS temp2 ON temp2.model = product.model
-)
-SELECT
-    DISTINCT maker,
-    IIF(COUNT(*) != COUNT(price), NULL, MAX(price))
-FROM
-    temp
-GROUP BY
-    maker;
+SELECT name
+FROM classes, ships
+WHERE launched >= 1922 AND displacement > 35000 AND type = 'bb' AND  ships.class = classes.class  
 ```
 
-## 42
+## 35 задание
 
 ```sql
-SELECT
-    ship,
-    battle
-FROM
-    Outcomes
-WHERE
-    result = 'sunk';
+SELECT model, type
+FROM product
+WHERE model NOT LIKE '%[^0-9]%' OR model NOT LIKE '%[^A-Z]%'
 ```
 
-## 43
+## 36 задание
 
 ```sql
-SELECT
-    Battles.name
-FROM
-    Battles
-WHERE
-    YEAR(Battles.date) NOT IN (
-        SELECT
-            Ships.launched
-        FROM
-            Ships
-        WHERE
-            Ships.launched IS NOT NULL
-    );
+SELECT name
+FROM ships
+WHERE class = name
+UNION
+SELECT ship AS name
+FROM classes, Outcomes
+WHERE classes.class = Outcomes.ship
 ```
 
-## 44
+## 37 задание
+
+```sql
+SELECT class
+FROM (
+SELECT name, class
+FROM ships
+UNION
+SELECT class AS name, class
+FROM classes, Outcomes
+WHERE classes.class = Outcomes.ship) A
+GROUP BY class
+HAVING count(A.name) = 1
+```
+
+## 38 задание
+
+```sql
+SELECT DISTINCT country  
+FROM classes  
+WHERE type = 'bb'   
+INTERSECT  
+SELECT DISTINCT country  
+FROM classes  
+WHERE type = 'bc'  
+```
+
+## 39 задание
+
+```sql
+WITH temp AS (SELECT * FROM Outcomes JOIN battles ON Outcomes.battle = battles.name)
+SELECT DISTINCT a.ship
+FROM temp AS a
+WHERE upper(a.ship) IN (SELECT upper(b.ship) FROM temp AS b WHERE b.date < a.date AND b.result = 'damaged')
+```
+
+## 40  задание
+
+```sql
+SELECT maker, max(type) AS type
+FROM product
+GROUP BY maker
+HAVING count(model) > 1 AND max(type) = min(type)
+```
+
+## 41 задание
 
 ```sql
 WITH temp AS (
-    SELECT
-        Ships.name
-    FROM
-        Ships
-    UNION
-    SELECT
-        Outcomes.ship AS name
-    FROM
-        Outcomes
-)
-SELECT
-    DISTINCT temp.name
-FROM
-    temp
-WHERE
-    temp.name LIKE 'R%';
+SELECT product.maker, temp2.price
+FROM product JOIN ( 
+SELECT model, price
+FROM pc
+UNION
+SELECT model, price
+FROM laptop
+UNION
+SELECT model, price
+FROM printer) AS temp2 ON temp2.model = product.model)
+SELECT DISTINCT maker, IIF(count(*) != count(price), NULL, max(price))
+FROM temp
+GROUP BY maker
 ```
 
-## 45
+## 42 задание
 
 ```sql
-WITH temp AS (
-    SELECT
-        Ships.name
-    FROM
-        Ships
-    UNION
-    SELECT
-        Outcomes.ship AS name
-    FROM
-        Outcomes
-)
-SELECT
-    DISTINCT temp.name
-FROM
-    temp
-WHERE
-    temp.name LIKE '% % %';
+SELECT ship, battle
+FROM Outcomes
+WHERE result = 'sunk'
 ```
 
-## 46
+## 43 задание
 
 ```sql
-SELECT
-    DISTINCT ship,
-    displacement,
-    numguns
-FROM
-    Classes
-    LEFT JOIN Ships ON Classes.class = Ships.class
-    RIGHT JOIN Outcomes ON Classes.class = Outcomes.ship
-    OR Ships.name = Outcomes.ship
-WHERE
-    battle = 'Guadalcanal';
+SELECT name
+FROM battles
+WHERE year(battles.date) NOT IN (SELECT ships.launched FROM ships WHERE ships.launched IS NOT NULL)
 ```
 
-## 47
+## 44 задание
+
+```sql
+SELECT name 
+FROM ships 
+WHERE name LIKE 'R%'   
+
+UNION   
+SELECT name
+FROM battles 
+WHERE name 
+LIKE 'R%'   
+
+UNION   
+SELECT ship 
+FROM outcomes 
+WHERE ship like 'R%'  
+```
+
+## 45 задание
+
+```sql
+SELECT name 
+FROM ships 
+WHERE name 
+LIKE '% % %'  
+UNION   
+SELECT ship 
+FROM outcomes 
+WHERE ship 
+LIKE '% % %'   
+```
+
+## 46 задание
+
+```sql
+SELECT DISTINCT ship, displacement, numguns
+FROM classes
+LEFT JOIN ships ON classes.class = ships.class
+RIGHT JOIN Outcomes ON classes.class = Outcomes.ship
+OR ships.name = Outcomes.ship
+WHERE battle = 'Guadalcanal'
+```
+
+## 47 задание
 
 ```sql
 WITH out AS (
-    SELECT
-        *
-    FROM
-        outcomes
-        JOIN (
-            SELECT
-                ships.name s_name,
-                classes.class s_class,
-                classes.country s_country
-            FROM
-                ships FULL
-                JOIN classes ON ships.class = classes.class
-        ) u ON outcomes.ship = u.s_class
-    UNION
-    SELECT
-        *
-    FROM
-        outcomes
-        JOIN (
-            SELECT
-                ships.name s_name,
-                classes.class s_class,
-                classes.country s_country
-            FROM
-                ships FULL
-                JOIN classes ON ships.class = classes.class
-        ) u ON outcomes.ship = u.s_name
-)
-SELECT
-    fin.country
-FROM
-    (
-        SELECT
-            DISTINCT t.country,
-            COUNT(t.name) AS num_ships
-        FROM
-            (
-                SELECT
-                    DISTINCT c.country,
-                    s.name
-                FROM
-                    classes c
-                    INNER JOIN Ships s ON s.class = c.class
-                UNION
-                SELECT
-                    DISTINCT c.country,
-                    o.ship
-                FROM
-                    classes c
-                    INNER JOIN Outcomes o ON o.ship = c.class
-            ) t
-        GROUP BY
-            t.country
-        INTERSECT
-        SELECT
-            out.s_country,
-            COUNT(out.ship) AS num_ships
-        FROM
-            out
-        WHERE
-            out.result = 'sunk'
-        GROUP BY
-            out.s_country
-    ) fin;
-```
-
-## 48
-
-```sql
-SELECT
-    DISTINCT Classes.class
-FROM
-    Classes
-    LEFT JOIN Ships ON Classes.class = Ships.class
-    RIGHT JOIN Outcomes ON Classes.class = Outcomes.ship
-    OR Ships.name = Outcomes.ship
-WHERE
-    result = 'sunk'
-    AND Classes.class IS NOT NULL;
-```
-
-## 49
-
-```sql
-WITH temp AS (
-    SELECT
-        class
-    FROM
-        classes
-    WHERE
-        bore = 16
-)
-SELECT
-    name
-FROM
-    ships
-WHERE
-    class IN(
-        SELECT
-            *
-        FROM
-            temp
-    )
+SELECT *
+FROM Outcomes
+JOIN (
+SELECT ships.name, classes.class, classes.country
+FROM ships FULL JOIN classes ON ships.class = classes.class) u ON outcomes.ship = u.s_class
 UNION
-SELECT
-    ship
+SELECT * 
+FROM Outcomes JOIN (
+SELECT ships.name, classes.class, classes.country
+FROM ships FULL JOIN classes ON ships.class = classes.class) u ON outcomes.ship = u.s_name)
+SELECT fin.country
+FROM (
+SELECT DISTINCT t.country, count(t.name) AS num_ships
+FROM (
+SELECT DISTINCT c.country, s.name
+FROM classes c INNER JOIN Ships s ON s.class = c.class
+UNION
+SELECT DISTINCT c.country, o.ship
 FROM
-    outcomes
-WHERE
-    ship IN(
-        SELECT
-            *
-        FROM
-            temp
-    );
+classes c INNER JOIN Outcomes o ON o.ship = c.class) t
+GROUP BY t.country
+INTERSECT
+SELECT out.s_country, count(out.ship)
+FROM out
+WHERE out.result = 'sunk'
+GROUP BY out.s_country 
+    ) fin
 ```
 
-## 50
+## 48 задание
 
 ```sql
-SELECT
-    DISTINCT o.battle
-FROM
-    ships s
-    JOIN outcomes o ON s.name = o.ship
-WHERE
-    s.class = 'kongo';
+SELECT DISTINCT classes.class
+FROM classes LEFT JOIN Ships ON Classes.class = Ships.class RIGHT JOIN Outcomes ON classes.class = Outcomes.ship OR ships.name = Outcomes.ship
+WHERE result = 'sunk' AND classes.class IS NOT NULL
 ```
 
-## 51
+## 49 задание
 
 ```sql
-SELECT
-    NAME
-FROM
-    (
-        SELECT
-            name AS NAME,
-            displacement,
-            numguns
-        FROM
-            ships
-            INNER JOIN classes ON ships.class = classes.class
-        UNION
-        SELECT
-            ship AS NAME,
-            displacement,
-            numguns
-        FROM
-            outcomes
-            INNER JOIN classes ON outcomes.ship = classes.class
-    ) AS d1
-    INNER JOIN (
-        SELECT
-            displacement,
-            max(numGuns) AS numguns
-        FROM
-            (
-                SELECT
-                    displacement,
-                    numguns
-                FROM
-                    ships
-                    INNER JOIN classes ON ships.class = classes.class
-                UNION
-                SELECT
-                    displacement,
-                    numguns
-                FROM
-                    outcomes
-                    INNER JOIN classes ON outcomes.ship = classes.class
-            ) AS f
-        GROUP BY
-            displacement
-    ) AS d2 ON d1.displacement = d2.displacement
-    AND d1.numguns = d2.numguns;
+SELECT name 
+FROM ships 
+WHERE class IN (SELECT class FROM classes WHERE bore = 16)   
+UNION
+SELECT ship
+FROM outcomes 
+WHERE ship IN (SELECT class FROM classes WHERE bore = 16)    
+```
+
+## 50 задание
+
+```sql
+SELECT DISTINCT battle 
+FROM Classes INNER JOIN ships  ON ships.class = classes.class INNER JOIN Outcomes ON classes.class = Outcomes.ship or ships.name = Outcomes.ship   
+WHERE classes.class = 'Kongo'  
+```
+
+## 51 задание
+
+```sql
+SELECT name 
+FROM (
+SELECT name AS name, displacement, numguns  
+FROM ships INNER JOIN classes on ships.class = classes.class 
+UNION 
+SELECT ship AS name, displacement, numguns
+FROM outcomes INNER JOIN classes ON outcomes.ship = classes.class) 
+AS d1 INNER JOIN (SELECT displacement, max(numGuns) AS numguns FROM (SELECT displacement, numguns FROM ships INNER JOIN classes ON ships.class = classes.class  
+UNION
+SELECT displacement, numguns  
+FROM outcomes INNER JOIN classes ON outcomes.ship = classes.class) AS f 
+GROUP BY displacement) AS d2 ON d1.displacement = d2.displacement AND d1.numguns = d2.numguns 
 ```
 
 
 
-## 52
+## 52 задание
 
 ```sql
 SELECT
@@ -1046,7 +574,7 @@ WHERE
 ```
 
 
-## 53
+## 53 задание
 
 ```sql
 SELECT
