@@ -551,410 +551,186 @@ GROUP BY displacement) AS d2 ON d1.displacement = d2.displacement AND d1.numguns
 ## 52 задание
 
 ```sql
-SELECT
-    DISTINCT Ships.name
-FROM
-    Ships
-    INNER JOIN Classes ON Ships.class = Classes.class
-WHERE
-    Classes.country = 'Japan'
-    AND Classes.type = 'bb'
-    AND (
-        Classes.numGuns >= 9
-        OR Classes.numGuns IS NULL
-    )
-    AND (
-        Classes.bore < 19
-        OR Classes.bore IS NULL
-    )
-    AND (
-        Classes.displacement <= 65000
-        OR Classes.displacement IS NULL
-    );
+SELECT DISTINCT name 
+FROM ships INNER JOIN classes ON ships.class = cl.class 
+WHERE (numGuns >= 9 OR numguns IS NULL) AND (bore < 19 OR bore IS NULL) AND (displacement <= 65000 OR displacement IS NULL) AND type = 'bb' AND country = 'japan' 
+
 ```
 
 
 ## 53 задание
 
 ```sql
-SELECT
-    cast(
-        AVG(Classes.numGuns * 1.0) AS numeric(6, 2)
-    )
-FROM
-    Classes
-WHERE
-    TYPE = 'bb';
+SELECT cast(avg(classes.numGuns * 1.0) AS numeric(6, 2))
+FROM classes
+WHERE type = 'bb'
 ```
 
 ## 54
 
 ```sql
-SELECT
-    CAST(AVG(numguns * 1.0) AS NUMERIC(6, 2)) AS AVG_nmg
-FROM
-    (
-        SELECT
-            ship,
-            TYPE,
-            numguns
-        FROM
-            Outcomes
-            LEFT JOIN Classes ON ship = class
-        UNION
-        SELECT
-            name,
-            TYPE,
-            numguns
-        FROM
-            Ships AS S
-            INNER JOIN Classes AS C ON c.class = s.class
-    ) AS T
-WHERE
-    TYPE = 'bb';
+SELECT cast(avg(numguns*1.0) AS NUMERIC (4,2)) 
+FROM (
+SELECT ship, type, numguns   
+FROM Outcomes LEFT JOIN Classes ON ship = class  
+UNION  
+SELECT name, type, numguns 
+FROM ships as s INNER JOIN  classes as c ON c.class = s.class) AS t 
+WHERE type = 'bb' 
 ```
 
 ## 55
 
 ```sql
-SELECT
-    classes.class,
-    min(ships.launched)
-FROM
-    classes
-    LEFT JOIN ships ON classes.class = ships.class
-GROUP BY
-    classes.class;
+SELECT classes.class, min(ships.launched)
+FROM classes LEFT JOIN ships ON classes.class = ships.class
+GROUP BY classes.class
 ```
 
 ## 56
 
 ```sql
-SELECT
-    c.class,
-    COUNT(s.ship)
-FROM
-    classes c
-    LEFT JOIN (
-        SELECT
-            o.ship,
-            sh.class
-        FROM
-            outcomes o
-            LEFT JOIN ships sh ON sh.name = o.ship
-        WHERE
-            o.result = 'sunk'
-    ) AS s ON s.class = c.class
-    OR s.ship = c.class
-GROUP BY
-    c.class;
+SELECT c.class, count(s.ship)
+FROM classes c LEFT JOIN (
+SELECT o.ship, sh.class
+FROM outcomes o LEFT JOIN ships sh ON sh.name = o.ship
+WHERE o.result = 'sunk') AS s ON s.class = c.class OR s.ship = c.class
+GROUP BY c.class
 ```
 
 ## 57
 
 ```sql
-SELECT
-    class AS cls,
-    count(class) AS sunked
-FROM
-    (
-        SELECT
-            C.class,
-            O.ship
-        FROM
-            classes AS C
-            JOIN outcomes AS O ON C.class = O.ship
-        WHERE
-            O.result = 'sunk'
-        UNION
-        SELECT
-            S.class,
-            O.ship
-        FROM
-            outcomes AS O
-            JOIN ships AS S ON S.name = O.ship
-        WHERE
-            O.result = 'sunk'
-    ) AS T
-WHERE
-    class IN (
-        SELECT
-            DISTINCT X.class
-        FROM
-            (
-                SELECT
-                    C.class,
-                    O.ship
-                FROM
-                    classes AS C
-                    JOIN outcomes AS O ON C.class = O.ship
-                UNION
-                SELECT
-                    C.class,
-                    S.name
-                FROM
-                    classes AS C
-                    JOIN ships AS S ON C.class = S.class
-            ) AS X
-        GROUP BY
-            X.class
-        HAVING
-            count(X.class) >= 3
-    )
-GROUP BY
-    class;
+SELECT class AS cls, count(class) AS sunked
+FROM (
+SELECT c.class, o.ship
+FROM classes AS c JOIN outcomes AS o ON c.class = O.ship
+WHERE o.result = 'sunk'
+UNION
+SELECT s.class, o.ship
+FROM outcomes AS o JOIN ships AS s ON s.name = o.ship
+WHERE o.result = 'sunk') AS t
+WHERE class IN (
+SELECT DISTINCT x.class 
+FROM (
+SELECT c.class, o.ship
+FROM classes AS c JOIN outcomes AS o ON c.class = o.ship
+UNION
+SELECT c.class, s.name
+FROM classes AS c JOIN ships AS s ON c.class = s.class) AS x
+GROUP BY x.class
+HAVING count(x.class) >= 3)
+GROUP BY class
 ```
 
 ## 58
 
 ```sql
-WITH pcj AS (
-    SELECT
-        *
-    FROM
-        (
-            SELECT
-                DISTINCT [maker]
-            FROM
-                product
-        ) AS tp
-        CROSS JOIN (
-            SELECT
-                DISTINCT [type]
-            FROM
-                Product
-        ) AS tt
-)
-SELECT
-    DISTINCT pcj.maker,
-    pcj.type,
-    cast(
-        count(model) over(PARTITION by pcj.[maker], pcj.[type]) * 100.0 / count(model) over(PARTITION by pcj.[maker]) AS numeric(10, 2)
-    ) AS val
-FROM
-    pcj
-    LEFT JOIN product ON pcj.maker = product.maker
-    AND pcj.type = product.type;
+SELECT main_maker, main_type, convert(numeric(6,2), ((sub_num * 100.00) / (total_num * 100.00) * 100.00))  
+FROM (SELECT count(p5.model) total_num, p5.maker main_maker 
+FROM product p5 GROUP BY p5.maker) p6 JOIN (SELECT p3.maker sub_maker, p3.type main_type, count(p4.model) sub_num 
+FROM (SELECT p1.maker maker, p2.type type FROM product p1 cross JOIN product p2 GROUP BY p1.maker, p2.type) p3 LEFT JOIN product p4 ON p3.maker = p4.maker AND p3.type = p4.type GROUP BY p3.maker, p3.type) p7 ON p7.sub_maker = p6.main_maker 
 ```
 
 ## 59
 
 ```sql
-SELECT
-    a.point,
-    CASE
-        WHEN o IS NULL THEN i
-        ELSE i - o
-    END remain
-FROM
-    (
-        SELECT
-            point,
-            sum(inc) AS i
-        FROM
-            Income_o
-        GROUP BY
-            point
-    ) AS A
-    LEFT JOIN (
-        SELECT
-            point,
-            sum(out) AS o
-        FROM
-            Outcome_o
-        GROUP BY
-            point
-    ) AS B ON A.point = B.point;
+SELECT a.point,
+CASE WHEN o IS NULL THEN i
+ELSE i - o
+END remain
+FROM (
+SELECT point, sum(inc) AS i
+FROM Income_o
+GROUP BY point) AS a LEFT JOIN (
+SELECT point, sum(out) AS o
+FROM Outcome_o
+GROUP BY point) AS b ON A.point = B.point
 ```
 
 ## 60
 
 ```sql
-SELECT
-    c1,
-    c2 - (
-        CASE
-            WHEN o2 IS NULL THEN 0
-            ELSE o2
-        END
-    )
-FROM
-    (
-        SELECT
-            point c1,
-            sum(inc) c2
-        FROM
-            income_o
-        WHERE
-            date < '2001-04-15'
-        GROUP BY
-            point
-    ) AS t1
-    LEFT JOIN (
-        SELECT
-            point o1,
-            sum(out) o2
-        FROM
-            outcome_o
-        WHERE
-            date < '2001-04-15'
-        GROUP BY
-            point
-    ) AS t2 ON c1 = o1;
+SELECT c1, c2 - (
+CASE WHEN o2 IS NULL THEN 0
+ELSE o2
+END)
+FROM (
+SELECT point c1, sum(inc) c2
+FROM Income_o
+WHERE date < '2001-04-15'
+GROUP BY point) AS t1 LEFT JOIN (
+SELECT point o1, sum(out) o2
+FROM Outcome_o
+WHERE date < '2001-04-15'
+GROUP BY point) AS t2 ON c1 = o1
 ```
 
 ## 61
 
 ```sql
-SELECT
-    sum(i)
-FROM
-    (
-        SELECT
-            point,
-            sum(inc) AS i
-        FROM
-            income_o
-        GROUP BY
-            point
-        UNION
-        SELECT
-            point,
-            - sum(out) AS i
-        FROM
-            outcome_o
-        GROUP BY
-            point
-    ) AS t;
+SELECT (
+SELECT sum(inc) 
+FROM Income_o) - (
+SELECT sum(out) 
+FROM Outcome_o) AS remain  
 ```
 
 ## 62
 
 ```sql
-SELECT
-    (
-        SELECT
-            sum(inc)
-        FROM
-            Income_o
-        WHERE
-            date < '2001-04-15'
-    ) - (
-        SELECT
-            sum(out)
-        FROM
-            Outcome_o
-        WHERE
-            date < '2001-04-15'
-    ) AS remain;
+SELECT (
+SELECT sum(inc)
+FROM Income_o
+WHERE date < '2001-04-15') - (
+SELECT sum(out)
+FROM Outcome_o
+WHERE date < '2001-04-15') AS remain
 ```
 
 ## 63
 
 ```sql
-SELECT
-    name
-FROM
-    Passenger
-WHERE
-    ID_psg IN (
-        SELECT
-            ID_psg
-        FROM
-            Pass_in_trip
-        GROUP BY
-            place,
-            ID_psg
-        HAVING
-            count(*) > 1
-    );
+SELECT name
+FROM passenger
+WHERE ID_psg IN (
+SELECT ID_psg
+FROM Pass_in_trip
+GROUP BY place, ID_psg
+HAVING count(*) > 1)
 ```
 
 ## 64
 
 ```sql
-SELECT
-    i1.point,
-    i1.date,
-    'inc',
-    sum(inc)
-FROM
-    Income,
-    (
-        SELECT
-            point,
-            date
-        FROM
-            Income
-        EXCEPT
-        SELECT
-            Income.point,
-            Income.date
-        FROM
-            Income
-            JOIN Outcome ON (Income.point = Outcome.point)
-            AND (Income.date = Outcome.date)
-    ) AS i1
-WHERE
-    i1.point = Income.point
-    AND i1.date = Income.date
-GROUP BY
-    i1.point,
-    i1.date
+SELECT income.point, income.date, 'inc' as operation, sum(income.inc) 
+FROM income LEFT JOIN outcome ON income.point = outcome.point AND income.date = outcome.date 
+WHERE outcome.date IS NULL  
+GROUP BY income.point, income.date 
 UNION
-SELECT
-    o1.point,
-    o1.date,
-    'out',
-    sum(out)
-FROM
-    Outcome,
-    (
-        SELECT
-            point,
-            date
-        FROM
-            Outcome
-        EXCEPT
-        SELECT
-            Income.point,
-            Income.date
-        FROM
-            Income
-            JOIN Outcome ON (Income.point = Outcome.point)
-            AND (Income.date = Outcome.date)
-    ) AS o1
-WHERE
-    o1.point = Outcome.point
-    AND o1.date = Outcome.date
-GROUP BY
-    o1.point,
-    o1.date;
+SELECT outcome.point, outcome.date, 'out' AS operation, sum(outcome.out) 
+FROM income RIGHT JOIN outcome ON income.point = outcome.point AND income.date = outcome.date 
+WHERE income.date IS NULL
+GROUP BY outcome.point, outcome.date 
+
+
 ```
 
 ## 65
 
 ```sql
 WITH pmq AS (
-    SELECT
-        [maker],
-        [type],
-        CASE
-            WHEN [type] = 'PC' THEN 0
-            WHEN [type] = 'Laptop' THEN 1
-            ELSE 2
-        END AS [s],
-        CASE
-            WHEN [type] = 'Laptop'
-            AND maker IN (
-                SELECT
-                    maker
-                FROM
-                    [Product]
-                WHERE
-                    [type] = 'PC'
-            ) THEN ''
-            WHEN [type] = 'Printer'
+SELECT maker, type, CASE 
+WHEN type = 'pc' THEN 0
+WHEN type = 'laptop' THEN 1
+ELSE 2
+END AS s, CASE
+WHEN type = 'laptop'
+AND maker IN (
+SELECT maker
+FROM product
+WHERE type = 'pc') THEN ''
+WHEN type = 'printer'
             AND maker IN (
                 SELECT
                     maker
@@ -980,329 +756,158 @@ SELECT
     ) num,
     [m],
     [type]
-FROM
-    [pmq]
-ORDER BY
-    [maker],
+FROM     [pmq]
+ORDER BY [maker],
     [s];
 ```
 
 ## 66
 
 ```sql
-SELECT
-    date,
-    max(c)
-FROM
-    (
-        SELECT
-            date,
-            count(*) AS c
-        FROM
-            Trip,
-            (
-                SELECT
-                    trip_no,
-                    date
-                FROM
-                    Pass_in_trip
-                WHERE
-                    date >= '2003-04-01'
-                    AND date <= '2003-04-07'
-                GROUP BY
-                    trip_no,
-                    date
-            ) AS t1
-        WHERE
-            Trip.trip_no = t1.trip_no
-            AND town_from = 'Rostov'
-        GROUP BY
-            date
-        UNION
-        ALL
-        SELECT
-            '2003-04-01',
-            0
-        UNION
-        ALL
-        SELECT
-            '2003-04-02',
-            0
-        UNION
-        ALL
-        SELECT
-            '2003-04-03',
-            0
-        UNION
-        ALL
-        SELECT
-            '2003-04-04',
-            0
-        UNION
-        ALL
-        SELECT
-            '2003-04-05',
-            0
-        UNION
-        ALL
-        SELECT
-            '2003-04-06',
-            0
-        UNION
-        ALL
-        SELECT
-            '2003-04-07',
-            0
-    ) AS t2
-GROUP BY
-    date;
+SELECT date, max(c)
+FROM (
+SELECT date, count(*) AS c
+FROM trip, (
+SELECT trip_no, date
+FROM Pass_in_trip
+WHERE date >= '2003-04-01' AND date <= '2003-04-07'
+GROUP BY trip_no, date) AS t1
+WHERE Trip.trip_no = t1.trip_no AND town_from = 'Rostov'
+GROUP BY date
+UNION ALL
+SELECT '2003-04-01', 0
+UNION ALL
+SELECT '2003-04-02', 0
+UNION ALL
+SELECT '2003-04-03', 0
+UNION ALL
+SELECT '2003-04-04', 0
+UNION ALL
+SELECT '2003-04-05', 0
+UNION ALL
+SELECT '2003-04-06', 0
+UNION ALL
+SELECT '2003-04-07', 0 ) AS t2
+GROUP BY date
 ```
 
 ## 67
 
 ```sql
-SELECT
-    count(*)
-FROM
-    (
-        SELECT
-            TOP 1 WITH TIES count(*) c,
-            town_from,
-            town_to
-        FROM
-            trip
-        GROUP BY
-            town_from,
-            town_to
-        ORDER BY
-            c DESC
-    ) AS t;
+SELECT count(tf) AS ctf 
+FROM ( 
+SELECT town_from AS tf, town_to, count(plane) AS cp 
+FROM Trip 
+GROUP BY town_from, town_to 
+HAVING count(plane) >= all (
+SELECT count(plane)  
+FROM Trip 
+GROUP BY town_from, town_to) ) as tablo 
 ```
 
 ## 68
 
 ```sql
-SELECT
-    count(*)
-FROM
-    (
-        SELECT
-            TOP 1 WITH TIES sum(c) cc,
-            c1,
-            c2
-        FROM
-            (
-                SELECT
-                    count(*) c,
-                    town_from c1,
-                    town_to c2
-                FROM
-                    trip
-                WHERE
-                    town_from >= town_to
-                GROUP BY
-                    town_from,
-                    town_to
-                UNION
-                ALL
-                SELECT
-                    count(*) c,
-                    town_to,
-                    town_from
-                FROM
-                    trip
-                WHERE
-                    town_to > town_from
-                GROUP BY
-                    town_from,
-                    town_to
-            ) AS t
-        GROUP BY
-            c1,
-            c2
-        ORDER BY
-            cc DESC
-    ) AS tt;
+SELECT count(*)
+FROM (
+SELECT sum(c) cc, c1, c2
+FROM (
+SELECT count(*) c, town_from c1, town_to c2
+FROM trip
+WHERE town_from >= town_to
+GROUP BY town_from, town_to
+UNION ALL
+SELECT count(*) c, town_to, town_from
+FROM trip
+WHERE town_to > town_from
+GROUP BY town_from, town_to) AS t
+GROUP BY c1, c2
+ORDER BY cc DESC) AS tt
 ```
 
 ## 69
 
 ```sql
 WITH t AS (
-    SELECT
-        point,
-        date,
-        inc,
-        0 AS out
-    FROM
-        income
-    UNION
-    ALL
-    SELECT
-        point,
-        date,
-        0 AS inc,
-        out
-    FROM
-        outcome
-)
-SELECT
-    t.point,
-    format(t.date, 'dd/MM/yyyy') AS DAY,
-    (
-        SELECT
-            SUM(i.inc)
-        FROM
-            t i
-        WHERE
-            i.date <= t.date
-            AND i.point = t.point
-    ) - (
-        SELECT
-            SUM(i.out)
-        FROM
-            t i
-        WHERE
-            i.date <= t.date
-            AND i.point = t.point
-    ) AS rem
-FROM
-    t
-GROUP BY
-    t.point,
-    t.date;
+SELECT point, date, inc, 0 AS out
+FROM Income
+UNION ALL
+SELECT point, date, 0 AS inc, out
+FROM Outcome)
+SELECT t.point, format(t.date, 'dd/MM/yyyy') AS day, (
+SELECT sum(i.inc)
+FROM t i
+WHERE i.date <= t.date AND i.point = t.point) - (
+SELECT sum(i.out) 
+FROM t i
+WHERE i.date <= t.date AND i.point = t.point) AS rem
+FROM t
+GROUP BY t.point, t.date
 ```
 
 ## 70
 
 ```sql
-SELECT
-    DISTINCT o.battle
-FROM
-    outcomes o
-    LEFT JOIN ships s ON s.name = o.ship
-    LEFT JOIN classes c ON o.ship = c.class
-    OR s.class = c.class
-WHERE
-    c.country IS NOT NULL
-GROUP BY
-    c.country,
-    o.battle
-HAVING
-    COUNT(o.ship) >= 3;
+SELECT DISTINCT o.battle
+FROM outcomes o LEFT JOIN ships s ON s.name = o.ship LEFT JOIN classes c ON o.ship = c.class OR s.class = c.class
+WHERE c.country IS NOT NULL
+GROUP BY c.country, o.battle
+HAVING count(o.ship) >= 3
 ```
 
 ## 71
 
 ```sql
-SELECT
-    p.maker
-FROM
-    product p
-    LEFT JOIN pc ON pc.model = p.model
-WHERE
-    p.type = 'PC'
-GROUP BY
-    p.maker
-HAVING
-    COUNT(p.model) = COUNT(pc.model);
+SELECT p.maker
+FROM product p LEFT JOIN pc ON pc.model = p.model
+WHERE p.type = 'pc'
+GROUP BY p.maker
+HAVING count(p.model) = count(pc.model)
 ```
 
 ## 72
 
 ```sql
-SELECT
-    TOP 1 WITH TIES name,
-    c3
-FROM
-    passenger
-    JOIN (
-        SELECT
-            c1,
-            max(c3) c3
-        FROM
-            (
-                SELECT
-                    pass_in_trip.ID_psg c1,
-                    Trip.ID_comp c2,
-                    count(*) c3
-                FROM
-                    pass_in_trip
-                    JOIN trip ON trip.trip_no = pass_in_trip.trip_no
-                GROUP BY
-                    pass_in_trip.ID_psg,
-                    Trip.ID_comp
-            ) AS t
-        GROUP BY
-            c1
-        HAVING
-            count(*) = 1
-    ) AS tt ON ID_psg = c1
-ORDER BY
-    c3 DESC;
+SELECT name, c3
+FROM passenger JOIN (
+SELECT c1, max(c3) c3
+FROM (
+SELECT pass_in_trip.ID_psg c1, Trip.ID_comp c2, count(*) c3
+FROM pass_in_trip JOIN trip ON trip.trip_no = pass_in_trip.trip_no
+GROUP BY pass_in_trip.ID_psg, Trip.ID_comp) AS t
+GROUP BY c1
+HAVING count(*) = 1) AS tt ON ID_psg = c1
+ORDER BY c3 DESC
 ```
 
 ## 73
 
 ```sql
-SELECT
-    DISTINCT c.country,
-    b.name
-FROM
-    battles b,
-    classes c
+SELECT DISTINCT c.country, b.name
+FROM battles b, classes c
 EXCEPT
-SELECT
-    c.country,
-    o.battle
-FROM
-    outcomes o
-    LEFT JOIN ships s ON s.name = o.ship
-    LEFT JOIN classes c ON o.ship = c.class
-    OR s.class = c.class
-WHERE
-    c.country IS NOT NULL
-GROUP BY
-    c.country,
-    o.battle;
+SELECT c.country, o.battle
+FROM outcomes o LEFT JOIN ships s ON s.name = o.ship LEFT JOIN classes c ON o.ship = c.class OR s.class = c.class
+WHERE c.country IS NOT NULL
+GROUP BY c.country, o.battle
 ```
 
 ## 74
 
 ```sql
-SELECT
-    c.country,
-    c.class
-FROM
-    classes c
-WHERE
-    UPPER(c.country) = 'RUSSIA'
-    AND EXISTS (
-        SELECT
-            c.country,
-            c.class
-        FROM
-            classes c
-        WHERE
-            UPPER(c.country) = 'RUSSIA'
-    )
-UNION
-ALL
-SELECT
-    c.country,
-    c.class
-FROM
-    classes c
-WHERE
-    NOT EXISTS (
-        SELECT
-            c.country,
-            c.class
-        FROM
-            classes c
-        WHERE
-            UPPER(c.country) = 'RUSSIA'
-    );
+SELECT c.country, c.class
+FROM classes c
+WHERE upper(c.country) = 'RUSSIA' AND EXISTS (
+SELECT c.country, c.class
+FROM classes c
+WHERE upper(c.country) = 'RUSSIA')
+UNION ALL
+SELECT c.country, c.class
+FROM classes c
+WHERE NOT EXISTS (
+SELECT c.country, c.class
+FROM classes c
+WHERE upper(c.country) = 'RUSSIA')
 ```
 
 ## 75
@@ -1368,8 +973,7 @@ HAVING
 
 ```sql
 WITH cte AS (
-    SELECT
-        ROW_NUMBER() OVER (
+SELECT ROW_NUMBER() OVER (
             PARTITION BY ps.ID_psg,
             pit.place
             ORDER BY
@@ -1394,173 +998,84 @@ FROM
     cte
 GROUP BY
     cte.ID_psg
-HAVING
-    MAX(rowNumber) = 1;
+HAVING max(rowNumber) = 1
 ```
 
 ## 77
 
 ```sql
-SELECT
-    TOP 1 WITH TIES *
-FROM
-    (
-        SELECT
-            count(DISTINCT(pt.trip_no)) qty,
-            pt.date
-        FROM
-            Trip t,
-            Pass_in_trip pt
-        WHERE
-            t.trip_no = pt.trip_no
-            AND t.town_from = 'Rostov'
-        GROUP BY
-            pt.date
-    ) t1
-ORDER BY
-    t1.qty DESC;
+SELECT TOP 1 WITH TIES *
+FROM (
+SELECT count(DISTINCT(pt.trip_no)) qty, pt.date
+FROM Trip t, Pass_in_trip pt
+WHERE t.trip_no = pt.trip_no AND t.town_from = 'Rostov'
+GROUP BY pt.date) t1
+ORDER BY t1.qty DESC
 ```
 
 ## 78
 
 ```sql
-SELECT
-    name,
-    REPLACE(
-        CONVERT(
-            CHAR(12),
-            DATEADD(m, DATEDIFF(m, 0, date), 0),
-            102
-        ),
-        '.',
-        '-'
-    ) AS first_day,
-    REPLACE(
-        CONVERT(
-            CHAR(12),
-            DATEADD(s, -1, DATEADD(m, DATEDIFF(m, 0, date) + 1, 0)),
-            102
-        ),
-        '.',
-        '-'
-    ) AS last_day
-FROM
-    Battles;
+SELECT name, replace(convert(char(12), dateadd(m, datediff(m, 0, date), 0), 102), '.', '-') AS first_day, replace(convert(CHAR(12), dateadd(s, -1, dateadd(m, datediff(m, 0, date) + 1, 0)), 102), '.', '-') AS last_day
+FROM battles
 ```
 
 ## 79
 
 ```sql
 WITH a AS(
-    SELECT
-        id_psg,
-        sum(
-            datediff(
-                mi,
-                time_out,
+SELECT id_psg, sum(datediff(mi, time_out,
                 CASE
                     WHEN time_out > time_in THEN dateadd(DAY, 1, time_in)
                     ELSE time_in
-                END
-            )
-        ) mnts
-    FROM
-        trip t
-        INNER JOIN pass_in_trip pit ON t.trip_no = pit.trip_no
-    GROUP BY
-        id_psg
-)
-SELECT
-    top(1) WITH ties name,
-    mnts
-FROM
-    a
-    INNER JOIN passenger p ON a.id_psg = p.id_psg
-ORDER BY
-    mnts DESC;
+                END)) mnts
+FROM trip t INNER JOIN pass_in_trip pit ON t.trip_no = pit.trip_no
+GROUP BY id_psg)
+SELECT top(1) WITH ties name, mnts
+FROM a INNER JOIN passenger p ON a.id_psg = p.id_psg
+ORDER BY mnts DESC
 ```
 
 ## 80
 ```sql
-SELECT
-    DISTINCT maker
-FROM
-    product
-WHERE
-    maker NOT IN (
-        SELECT
-            maker
-        FROM
-            product
-        WHERE
-            TYPE = 'PC'
-            AND model NOT IN (
-                SELECT
-                    model
-                FROM
-                    PC
-            )
-    );
+SELECT DISTINCT maker
+FROM product
+WHERE maker NOT IN (
+SELECT maker
+FROM product 
+WHERE type = 'pc' AND model NOT IN (
+SELECT model
+FROM pc))
 ```
 
 
 ## 81
 
 ```sql
-SELECT
-    O.*
-FROM
-    outcome O
-    INNER JOIN (
-        SELECT
-            TOP 1 WITH TIES YEAR(date) AS Y,
-            MONTH(date) AS M,
-            SUM(out) AS ALL_TOTAL
-        FROM
-            outcome
-        GROUP BY
-            YEAR(date),
-            MONTH(date)
-        ORDER BY
-            ALL_TOTAL DESC
-    ) R ON YEAR(O.date) = R.Y
-    AND MONTH(O.date) = R.M;
+SELECT o.*
+FROM outcome o INNER JOIN (
+SELECT TOP 1 WITH TIES year(date) AS y, month(date) AS m, sum(out) AS sumo
+FROM Outcome
+GROUP BY year(date), month(date)
+ORDER BY sumo DESC) R ON year(o.date) = r.y AND month(o.date) = r.m
 ```
 
 ## 82
 ```sql
-WITH CTE(code, price, number) AS (
-    SELECT
-        PC.code,
-        PC.price,
-        number = ROW_NUMBER() OVER (
-            ORDER BY
-                PC.code
-        )
-    FROM
-        PC
-)
-SELECT
-    CTE.code,
-    AVG(C.price)
-FROM
-    CTE
-    JOIN CTE C ON (C.number - CTE.number) < 6
-    AND (C.number - CTE.number) >= 0
-GROUP BY
-    CTE.number,
-    CTE.code
-HAVING
-    COUNT(CTE.number) = 6;
+WITH cte(code, price, number) AS (
+SELECT pc.code, pc.price, number = row_number() over (
+ORDER BY pc.code)
+FROM pc)
+SELECT cte.code, avg(c.price)
+FROM cte JOIN cte c ON (c.number - cte.number) < 6 AND (c.number - cte.number) >= 0
+GROUP BY cte.number, cte.code
+HAVING count(cte.number) = 6
 ```
 
 ## 83
 ```sql
-SELECT
-    s.name
-FROM
-    Classes c
-    INNER JOIN Ships s ON c.class = s.class
+SELECT s.name
+FROM classes c INNER JOIN ships s ON c.class = s.class
 WHERE
     CASE
         WHEN c.numGuns = 8 THEN 1
@@ -1583,563 +1098,263 @@ WHERE
     END + CASE
         WHEN c.country = 'USA' THEN 1
         ELSE 0
-    END > = 4;
+    END > = 4
 ```
 
 ## 84
 ```sql
-SELECT
-    C.name,
-    A.N_1_10,
-    A.N_11_21,
-    A.N_21_30
-FROM
-    (
-        SELECT
-            T.ID_comp,
-            SUM(
+SELECT c.name, A.N_1_10, A.N_11_21, A.N_21_30
+FROM (
+SELECT t.ID_comp, SUM(
                 CASE
                     WHEN DAY(P.date) < 11 THEN 1
                     ELSE 0
-                END
-            ) AS N_1_10,
-            SUM(
+                END) AS N_1_10,
+                  SUM(
                 CASE
-                    WHEN (
-                        DAY(P.date) > 10
-                        AND DAY(P.date) < 21
-                    ) THEN 1
+                    WHEN (day(P.date) > 10 AND day(P.date) < 21) THEN 1
                     ELSE 0
-                END
-            ) AS N_11_21,
-            SUM(
+                END) AS N_11_21,
+                  SUM(
                 CASE
                     WHEN DAY(P.date) > 20 THEN 1
                     ELSE 0
-                END
-            ) AS N_21_30
-        FROM
-            Trip AS T
-            JOIN Pass_in_trip AS P ON T.trip_no = P.trip_no
-            AND CONVERT(char(6), P.date, 112) = '200304'
-        GROUP BY
-            T.ID_comp
-    ) AS A
-    JOIN Company AS C ON A.ID_comp = C.ID_comp;
+                END) AS N_21_30
+FROM trip AS t JOIN Pass_in_trip AS p ON t.trip_no = p.trip_no AND convert(char(6), P.date, 112) = '200304'
+GROUP BY T.ID_comp) AS a JOIN Company AS c ON A.ID_comp = C.ID_comp
 ```
 
 ## 85
 
 ```sql
-SELECT
-    maker
-FROM
-    product
-GROUP BY
-    maker
-HAVING
-    count(DISTINCT TYPE) = 1
-    AND (
-        min(TYPE) = 'printer'
-        OR (
-            min(TYPE) = 'pc'
-            AND count(model) >= 3
-        )
-    );
+SELECT maker
+FROM product
+GROUP BY maker
+HAVING count(DISTINCT type) = 1 AND (min(type) = 'printer' OR (min(type) = 'pc' AND count(model) >= 3))
 ```
 
 ## 86
 ```sql
-SELECT
-    maker,
-    CASE
-        count(DISTINCT TYPE)
-        WHEN 2 THEN MIN(TYPE) + '/' + MAX(TYPE)
-        WHEN 1 THEN MAX(TYPE)
-        WHEN 3 THEN 'Laptop/PC/Printer'
+SELECT maker, CASE count(DISTINCT type) 
+        WHEN 2 THEN min(type) + '/' + max(type)
+        WHEN 1 THEN max(type)
+        WHEN 3 THEN 'laptop/pc/printer'
     END
-FROM
-    Product
-GROUP BY
-    maker;
+FROM product
+GROUP BY maker
 ```
 
 ## 87
 ```sql
-SELECT
-    DISTINCT name,
-    COUNT(town_to) Qty
-FROM
-    Trip tr
-    JOIN Pass_in_trip pit ON tr.trip_no = pit.trip_no
-    JOIN Passenger psg ON pit.ID_psg = psg.ID_psg
-WHERE
-    town_to = 'Moscow'
-    AND pit.ID_psg NOT IN(
-        SELECT
-            DISTINCT ID_psg
-        FROM
-            Trip tr
-            JOIN Pass_in_trip pit ON tr.trip_no = pit.trip_no
-        WHERE
-            date + time_out = (
-                SELECT
-                    MIN (date + time_out)
-                FROM
-                    Trip tr1
-                    JOIN Pass_in_trip pit1 ON tr1.trip_no = pit1.trip_no
-                WHERE
-                    pit.ID_psg = pit1.ID_psg
-            )
-            AND town_from = 'Moscow'
-    )
-GROUP BY
-    pit.ID_psg,
-    name
-HAVING
-    COUNT(town_to) > 1;
+SELECT DISTINCT name, COUNT(town_to) Qty
+FROM trip tr JOIN Pass_in_trip pit ON tr.trip_no = pit.trip_no JOIN Passenger psg ON pit.ID_psg = psg.ID_psg
+WHERE town_to = 'Moscow' AND pit.ID_psg NOT IN(
+SELECT DISTINCT ID_psg
+FROM Trip tr JOIN Pass_in_trip pit ON tr.trip_no = pit.trip_no
+WHERE date + time_out = (
+SELECT min(date + time_out)
+FROM trip tr1 JOIN Pass_in_trip pit1 ON tr1.trip_no = pit1.trip_no
+WHERE pit.ID_psg = pit1.ID_psg) AND town_from = 'Moscow')
+GROUP BY pit.ID_psg, name
+HAVING count(town_to) > 1
 ```
 
 ## 88
 ```sql
-SELECT
-    (
-        SELECT
-            name
-        FROM
-            Passenger
-        WHERE
-            ID_psg = B.ID_psg
-    ) AS name,
-    B.trip_Qty,
-    (
-        SELECT
-            name
-        FROM
-            Company
-        WHERE
-            ID_comp = B.ID_comp
-    ) AS Company
-FROM
-    (
-        SELECT
-            P.ID_psg,
-            MIN(T.ID_comp) AS ID_comp,
-            COUNT(*) AS trip_Qty,
-            MAX(COUNT(*)) OVER() AS Max_Qty
-        FROM
-            Pass_in_trip AS P
-            JOIN Trip AS T ON P.trip_no = T.trip_no
-        GROUP BY
-            P.ID_psg
-        HAVING
-            MIN(T.ID_comp) = MAX(T.ID_comp)
-    ) AS B
-WHERE
-    B.trip_Qty = B.Max_Qty;
+SELECT (
+SELECT name
+FROM passenger
+WHERE ID_psg = B.ID_psg) AS name, B.trip_Qty, (
+SELECT name
+FROM company
+WHERE ID_comp = B.ID_comp) AS Company
+FROM (
+SELECT P.ID_psg, min(T.ID_comp) AS ID_comp, count(*) AS trip_Qty, max(count(*)) over() AS Max_Qty
+FROM Pass_in_trip AS p JOIN Trip AS t ON P.trip_no = T.trip_no 
+GROUP BY P.ID_psg
+HAVING min(T.ID_comp) = max(T.ID_comp)  AS B
+WHERE B.trip_Qty = B.Max_Qty
 ```
 
 ## 89
 ```sql
-SELECT
-    Maker,
-    count(DISTINCT model) Qty
-FROM
-    Product
-GROUP BY
-    maker
-HAVING
-    count(DISTINCT model) >= ALL (
-        SELECT
-            count(DISTINCT model)
-        FROM
-            Product
-        GROUP BY
-            maker
-    )
-    OR count(DISTINCT model) <= ALL (
-        SELECT
-            count(DISTINCT model)
-        FROM
-            Product
-        GROUP BY
-            maker
-    );
+SELECT maker, count(DISTINCT model) Qty
+FROM product
+GROUP BY maker
+HAVING count(DISTINCT model) >= ALL (
+SELECT count(DISTINCT model)
+FROM product
+GROUP BY maker) OR count(DISTINCT model) <= ALL (
+SELECT count(DISTINCT model)
+FROM product
+GROUP BY maker)
 ```
 
 ## 90
 
 ```sql
-SELECT
-    t1.maker,
-    t1.model,
-    t1.type
-FROM
-    (
-        SELECT
-            row_number() over (
-                ORDER BY
-                    model
-            ) p1,
-            row_number() over (
-                ORDER BY
-                    model DESC
-            ) p2,
-            *
-        FROM
-            product
-    ) t1
-WHERE
-    p1 > 3
-    AND p2 > 3;
+SELECT t1.maker, t1.model, t1.type
+FROM (
+SELECT row_number() over (
+ORDER BY model) p1, row_number() over (
+ORDER BY model DESC) p2, * 
+FROM product) t1
+WHERE p1 > 3 AND p2 > 3
 ```
 
 ## 91
 
 ```sql
-SELECT
-    CAST(
-        1.0 * CASE
-            WHEN (
-                SELECT
-                    Sum(B_VOL)
-                FROM
-                    utB
-            ) IS NULL THEN 0
-            ELSE (
-                SELECT
-                    Sum(B_VOL)
-                FROM
-                    utB
-            )
-        END / (
-            SELECT
-                count(*)
-            FROM
-                utQ
-        ) AS NUMERIC(6, 2)
-    ) avg_paint;
+SELECT CAST(1.0 * CASE
+WHEN (
+SELECT Sum(B_VOL)
+FROM utB) IS NULL THEN 0 ELSE (
+SELECT Sum(B_VOL)
+FROM utB) END / (
+SELECT count(*) FROM utQ) AS NUMERIC(6, 2))avg_paint
 ```
 
 ## 92
 
 ```sql
-SELECT
-    Q_NAME
-FROM
-    utQ
-WHERE
-    Q_ID IN (
-        SELECT
-            DISTINCT B.B_Q_ID
-        FROM
-            (
-                SELECT
-                    B_Q_ID
-                FROM
-                    utB
-                GROUP BY
-                    B_Q_ID
-                HAVING
-                    SUM(B_VOL) = 765
-            ) AS B
-        WHERE
-            B.B_Q_ID NOT IN (
-                SELECT
-                    B_Q_ID
-                FROM
-                    utB
-                WHERE
-                    B_V_ID IN (
-                        SELECT
-                            B_V_ID
-                        FROM
-                            utB
-                        GROUP BY
-                            B_V_ID
-                        HAVING
-                            SUM(B_VOL) < 255
-                    )
-            )
-    );
+SELECT Q_NAME
+FROM utQ
+WHERE Q_ID IN (
+SELECT DISTINCT B.B_Q_ID
+FROM (
+SELECT B_Q_ID
+FROM utB
+GROUP BY B_Q_ID
+HAVING SUM(B_VOL) = 765) AS B
+WHERE B.B_Q_ID NOT IN (
+SELECT B_Q_ID
+FROM utB
+WHERE B_V_ID IN (
+SELECT B_V_ID
+FROM utB
+GROUP BY B_V_ID
+HAVING sum(B_VOL) < 255)))
 ```
 
 ## 93
 ```sql
-SELECT
-    c.name,
-    sum(vr.vr)
-FROM
-    (
-        SELECT
-            DISTINCT t.id_comp,
-            pt.trip_no,
-            pt.date,
-            t.time_out,
-            t.time_in,
-            --pt.id_psg,
+SELECT c.name, sum(vr.vr)
+FROM (
+SELECT DISTINCT t.id_comp, pt.trip_no, pt.date, t.time_out, t.time_in, -pt.id_psg,
             CASE
                 WHEN DATEDIFF(mi, t.time_out, t.time_in) > 0 THEN DATEDIFF(mi, t.time_out, t.time_in)
                 WHEN DATEDIFF(mi, t.time_out, t.time_in) <= 0 THEN DATEDIFF(mi, t.time_out, t.time_in + 1)
             END vr
-        FROM
-            pass_in_trip pt
-            LEFT JOIN trip t ON pt.trip_no = t.trip_no
-    ) vr
-    LEFT JOIN company c ON vr.id_comp = c.id_comp
-GROUP BY
-    c.name;
+FROM pass_in_trip pt LEFT JOIN trip t ON pt.trip_no = t.trip_no) vr LEFT JOIN company c ON vr.id_comp = c.id_comp
+GROUP BY c.name
 ```
 
 ## 94
 
 ```sql
-SELECT
-    DATEADD(DAY, S.Num, D.date) AS Dt,
-    (
-        SELECT
-            COUNT(DISTINCT P.trip_no)
-        FROM
-            Pass_in_trip P
-            JOIN Trip T ON P.trip_no = T.trip_no
-            AND T.town_from = 'Rostov'
-            AND P.date = DATEADD(DAY, S.Num, D.date)
-    ) AS Qty
-FROM
-    (
-        SELECT
-            (3 * (x - 1) + y - 1) AS Num
-        FROM
-            (
-                SELECT
-                    1 AS x
-                UNION
-                ALL
-                SELECT
-                    2
-                UNION
-                ALL
-                SELECT
-                    3
-            ) AS N1
-            CROSS JOIN (
-                SELECT
-                    1 AS y
-                UNION
-                ALL
-                SELECT
-                    2
-                UNION
-                ALL
-                SELECT
-                    3
-            ) AS N2
-        WHERE
-            (3 * (x - 1) + y) < 8
-    ) AS S,
-    (
-        SELECT
-            MIN(A.date) AS date
-        FROM
-            (
-                SELECT
-                    P.date,
-                    COUNT(DISTINCT P.trip_no) AS Qty,
-                    MAX(COUNT(DISTINCT P.trip_no)) OVER() AS M_Qty
-                FROM
-                    Pass_in_trip AS P
-                    JOIN Trip AS T ON P.trip_no = T.trip_no
-                    AND T.town_from = 'Rostov'
-                GROUP BY
-                    P.date
-            ) AS A
-        WHERE
-            A.Qty = A.M_Qty
-    ) AS D;
+SELECT dateadd(day, S.Num, D.date) AS Dt, (
+SELECT count(DISTINCT P.trip_no)
+FROM Pass_in_trip P JOIN Trip T ON P.trip_no = T.trip_no AND T.town_from = 'Rostov' AND P.date = DATEADD(DAY, S.Num, D.date)) AS Qty
+FROM (
+SELECT (3 * (x - 1) + y - 1) AS Num
+FROM (
+SELECT 1 AS x
+UNION ALL
+SELECT 2
+UNION ALL
+SELECT 3) AS N1 CROSS JOIN (
+SELECT 1 AS y
+UNION ALL
+SELECT 2
+UNION ALL
+SELECT 3) AS N2
+WHERE (3 * (x - 1) + y) < 8) AS S, (
+SELECT min(A.date) AS date
+FROM (
+SELECT P.date, count(DISTINCT P.trip_no) AS Qty, max(count(DISTINCT P.trip_no)) over() AS M_Qty
+FROM Pass_in_trip AS P JOIN Trip AS T ON P.trip_no = T.trip_no AND T.town_from = 'Rostov'
+GROUP BY P.date) AS A
+WHERE A.Qty = A.M_Qty) AS D
 ```
 
 
 ## 95
 
 ```sql
-SELECT
-    name,
-    COUNT(
-        DISTINCT CONVERT(CHAR(24), date) + CONVERT(CHAR(4), Trip.trip_no)
-    ),
-    COUNT(DISTINCT plane),
-    COUNT(DISTINCT ID_psg),
-    COUNT(*)
-FROM
-    Company,
-    Pass_in_trip,
-    Trip
-WHERE
-    Company.ID_comp = Trip.ID_comp
-    AND Trip.trip_no = Pass_in_trip.trip_no
-GROUP BY
-    Company.ID_comp,
-    name;
+SELECT name, count(DISTINCT convert(char(24), date) + convert(CHAR(4), Trip.trip_no)), count(DISTINCT plane), count(DISTINCT ID_psg), count(*)
+FROM company, Pass_in_trip, trip
+WHERE Company.ID_comp = Trip.ID_comp AND Trip.trip_no = Pass_in_trip.trip_no
+GROUP BY Company.ID_comp, name
 ```
 
 ## 96
 
 ```sql
 WITH r AS (
-    SELECT
-        v.v_name,
-        v.v_id,
-        count(
+SELECT v.v_name, v.v_id, count(
             CASE
                 WHEN v_color = 'R' THEN 1
-            END
-        ) over(PARTITION by v_id) cnt_r,
+            END) over(PARTITION by v_id) cnt_r,
         count(
             CASE
                 WHEN v_color = 'B' THEN 1
-            END
-        ) over(PARTITION by b_q_id) cnt_b
-    FROM
-        utV v
-        JOIN utB b ON v.v_id = b.b_v_id
-)
-SELECT
-    v_name
-FROM
-    r
-WHERE
-    cnt_r > 1
-    AND cnt_b > 0
-GROUP BY
-    v_name;
+            END) over(PARTITION by b_q_id) cnt_b
+FROM utV v JOIN utB b ON v.v_id = b.b_v_id)
+SELECT v_name
+FROM r
+WHERE cnt_r > 1 AND cnt_b > 0
+GROUP BY v_name
 ```
 
 ## 97
 ```sql
-SELECT
-    code,
-    speed,
-    ram,
-    price,
-    screen
-FROM
-    laptop
-WHERE
-    EXISTS (
-        SELECT
-            1 x
-        FROM
-            (
-                SELECT
-                    v,
-                    rank() over(
-                        ORDER BY
-                            v
-                    ) rn
-                FROM
-                    (
-                        SELECT
-                            cast(speed AS float) sp,
-                            cast(ram AS float) rm,
-                            cast(price AS float) pr,
-                            cast(screen AS float) sc
-                    ) l unpivot(v FOR c IN (sp, rm, pr, sc)) u
-            ) l pivot(max(v) FOR rn IN ([1], [2], [3], [4])) p
-        WHERE
-            [1] * 2 <= [2]
-            AND [2] * 2 <= [3]
-            AND [3] * 2 <= [4]
-    );
+SELECT code, speed, ram, price, screen
+FROM laptop
+WHERE EXISTS (
+SELECT 1 x
+FROM (
+SELECT v, rank() over(
+ORDER BY v) rn
+FROM ( 
+SELECT cast(speed AS float) sp, cast(ram AS float) rm, cast(price AS float) pr, cast(screen AS float) sc) l unpivot(v FOR c IN (sp, rm, pr, sc)) u) l pivot(max(v) FOR rn IN ([1], [2], [3], [4])) p
+WHERE [1] * 2 <= [2] AND [2] * 2 <= [3] AD [3] * 2 <= [4])
 ```
 ## 98
 
 ```sql
 WITH CTE AS (
-    SELECT
-        1 n,
-        cast (0 AS varchar(16)) bit_or,
-        code,
-        speed,
-        ram
-    FROM
-        PC
-    UNION
-    ALL
-    SELECT
-        n * 2,
-        cast (CONVERT(bit,(speed | ram) & n) AS varchar(1)) + cast(bit_or AS varchar(15)),
-        code,
-        speed,
-        ram
-    FROM
-        CTE
-    WHERE
-        n < 65536
-)
-SELECT
-    code,
-    speed,
-    ram
-FROM
-    CTE
-WHERE
-    n = 65536
-    AND CHARINDEX('1111', bit_or) > 0;
+SELECT 1 n, cast (0 AS varchar(16)) bit_or, code, speed, ram
+FROM pc
+UNNION ALL
+SELECT n * 2, cast (CONVERT(bit,(speed | ram) & n) AS varchar(1)) + cast(bit_or AS varchar(15)), code, speed, ram
+FROM CTE 
+WHERE n < 65536)
+SELECT code, speed, ram
+FROM CTE
+WHERE n = 65536 AND CHARINDEX('1111', bit_or) > 0
 ```
 
 ## 99
 
 ```sql
-SELECT
-    point,
-    "date" income_date,
-    "date" + nvl(
-        min(
+SELECT point, "date" income_date, "date" + nvl(
+min(
             CASE
                 WHEN diff > cnt THEN cnt
                 ELSE NULL
-            END
-        ),
-        max(cnt) + 1
-    ) incass_date
-FROM
-    (
-        SELECT
-            i.point,
-            i."date",
-            (trunc(o."date") - trunc(i."date")) diff,
-            -- разница дней
-            -- количество запрещенных для инкассации дней после прихода и до текущего запрещенного дня
-            count(1) over (
-                PARTITION by i.point,
-                i."date"
-                ORDER BY
-                    o."date" ROWS BETWEEN unbounded preceding
-                    AND current ROW
-            ) -1 cnt
-        FROM
-            income_o i
-            JOIN (
-                SELECT
-                    point,
-                    "date",
-                    1 disabled
-                FROM
-                    outcome_o
-                UNION
-                SELECT
-                    point,
-                    trunc("date" + 7, 'DAY'),
-                    1 disabled
-                FROM
-                    income_o
-            ) o ON i.point = o.point
-        WHERE
-            o."date" > = i."date"
-    )
-GROUP BY
-    point,
-    "date";
+            END), max(cnt) + 1) incass_date
+FROM (
+SELECT i.point, i."date", (trunc(o."date") - trunc(i."date")) diff, count(1) over (
+PARTITION by i.point, i."date"
+ORDER BY o."date" ROWS BETWEEN unbounded preceding AND current ROW) -1 cnt
+FROM income_o i JOIN (
+SELECT point, "date", 1 disabled
+FROM outcome_o
+UNION 
+SELECT point, trunc("date" + 7, 'DAY'), 1 disabled 
+FROM income_o) o ON i.point = o.point
+WHERE o."date" > = i."date")
+GROUP BY point, "date"
 ```
 
 ## 100
